@@ -1,28 +1,24 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Link } from "react-router-dom"
-import { ArrowLeft, UploadCloud } from "lucide-react"
-
+import { Link, useNavigate } from "react-router-dom"
+import { ArrowLeft, UploadCloud, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useEffect, useState } from "react"
+import { supabase, type Contractor, type Project } from "@/lib/supabase"
 
 const formSchema = z.object({
   contractorId: z.string().min(1, { message: "Contractor is required" }),
   projectId: z.string().min(1, { message: "Project is required" }),
   siteLocation: z.string().min(1, { message: "Site location is required" }),
+  dateIssued: z.string().min(1, { message: "Date is required" }),
   originalInvoice: z.string().optional(),
   reasonCategory: z.string().min(1, { message: "Reason category is required" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters." }),
@@ -31,19 +27,20 @@ const formSchema = z.object({
 })
 
 export function CreateDebitNote() {
+  const navigate = useNavigate()
   const [totalDeduction, setTotalDeduction] = useState(0)
+  const [contractors, setContractors] = useState<Contractor[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [dnNumber, setDnNumber] = useState("DN-2026-001")
+  const [saving, setSaving] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
-      contractorId: "",
-      projectId: "",
-      siteLocation: "",
-      originalInvoice: "",
-      reasonCategory: "",
-      description: "",
-      debitAmount: 0,
-      taxAmount: 0,
+      contractorId: "", projectId: "", siteLocation: "",
+      dateIssued: new Date().toISOString().split("T")[0],
+      originalInvoice: "", reasonCategory: "", description: "",
+      debitAmount: 0, taxAmount: 0,
     },
   })
 
@@ -52,22 +49,57 @@ export function CreateDebitNote() {
   const taxAmount = watch("taxAmount")
 
   useEffect(() => {
-    const total = (Number(debitAmount) || 0) + (Number(taxAmount) || 0)
-    setTotalDeduction(total)
+    setTotalDeduction((Number(debitAmount) || 0) + (Number(taxAmount) || 0))
   }, [debitAmount, taxAmount])
 
-  function onSubmit(values: any) {
-    console.log(values)
-    // Handle form submission
+  // Load contractors and projects from Supabase
+  useEffect(() => {
+    const load = async () => {
+      const [{ data: c }, { data: p }] = await Promise.all([
+        supabase.from("contractors").select("*").order("company"),
+        supabase.from("projects").select("*").order("name"),
+      ])
+      if (c) setContractors(c)
+      if (p) setProjects(p)
+
+      // Auto-generate DN number
+      const { count } = await supabase.from("debit_notes").select("*", { count: "exact", head: true })
+      const year = new Date().getFullYear()
+      const next = String((count || 0) + 1).padStart(3, "0")
+      setDnNumber(`DN-${year}-${next}`)
+    }
+    load()
+  }, [])
+
+  async function onSubmit(values: any) {
+    setSaving(true)
+    const payload = {
+      dn_number: dnNumber,
+      date_issued: values.dateIssued,
+      contractor_id: values.contractorId,
+      project_id: values.projectId,
+      site_location: values.siteLocation,
+      original_invoice: values.originalInvoice || null,
+      reason_category: values.reasonCategory,
+      description: values.description,
+      debit_amount: Number(values.debitAmount),
+      tax_amount: Number(values.taxAmount),
+      status: "Pending",
+    }
+    const { error } = await supabase.from("debit_notes").insert([payload])
+    if (!error) {
+      navigate("/debit-notes")
+    } else {
+      alert("Error saving debit note: " + error.message)
+    }
+    setSaving(false)
   }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-4">
         <Link to="/debit-notes">
-          <Button variant="outline" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+          <Button variant="outline" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Create Debit Note</h2>
@@ -75,14 +107,18 @@ export function CreateDebitNote() {
         </div>
       </div>
 
+      {/* DN Number Badge */}
+      <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-4 py-2">
+        <span className="text-sm text-muted-foreground">Auto-generated DN Number:</span>
+        <span className="font-bold text-primary text-lg">{dnNumber}</span>
+      </div>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Basic Information</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -92,15 +128,11 @@ export function CreateDebitNote() {
                         <FormItem>
                           <FormLabel>Contractor Name</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select contractor" />
-                              </SelectTrigger>
-                            </FormControl>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select contractor" /></SelectTrigger></FormControl>
                             <SelectContent>
-                              <SelectItem value="1">ABC Constructions</SelectItem>
-                              <SelectItem value="2">XYZ Builders</SelectItem>
-                              <SelectItem value="3">Skyline Infra</SelectItem>
+                              {contractors.map(c => (
+                                <SelectItem key={c.id} value={c.id}>{c.company} — {c.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -114,15 +146,11 @@ export function CreateDebitNote() {
                         <FormItem>
                           <FormLabel>Project Name</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select project" />
-                              </SelectTrigger>
-                            </FormControl>
+                            <FormControl><SelectTrigger><SelectValue placeholder="Select project" /></SelectTrigger></FormControl>
                             <SelectContent>
-                              <SelectItem value="p1">Tower A</SelectItem>
-                              <SelectItem value="p2">Phase 2</SelectItem>
-                              <SelectItem value="p3">Tower B</SelectItem>
+                              {projects.map(p => (
+                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -130,42 +158,48 @@ export function CreateDebitNote() {
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control as any}
+                      name="dateIssued"
+                      render={({ field }: any) => (
+                        <FormItem>
+                          <FormLabel>Date Issued</FormLabel>
+                          <FormControl><Input type="date" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control as any}
                       name="siteLocation"
                       render={({ field }: any) => (
                         <FormItem>
                           <FormLabel>Site Location</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. Block C, Floor 4" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control as any}
-                      name="originalInvoice"
-                      render={({ field }: any) => (
-                        <FormItem>
-                          <FormLabel>Original Invoice (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="INV-2026-..." {...field} />
-                          </FormControl>
+                          <FormControl><Input placeholder="e.g. Block C, Floor 4" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
+
+                  <FormField
+                    control={form.control as any}
+                    name="originalInvoice"
+                    render={({ field }: any) => (
+                      <FormItem>
+                        <FormLabel>Original Invoice Number (Optional)</FormLabel>
+                        <FormControl><Input placeholder="INV-2026-..." {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Debit Details</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Debit Details</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
                     control={form.control as any}
@@ -174,22 +208,11 @@ export function CreateDebitNote() {
                       <FormItem>
                         <FormLabel>Reason Category</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select reason" />
-                            </SelectTrigger>
-                          </FormControl>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger></FormControl>
                           <SelectContent>
-                            <SelectItem value="Rework">Rework</SelectItem>
-                            <SelectItem value="Water Leakage">Water Leakage</SelectItem>
-                            <SelectItem value="Damage">Damage</SelectItem>
-                            <SelectItem value="Delay">Delay</SelectItem>
-                            <SelectItem value="Overbilling">Overbilling</SelectItem>
-                            <SelectItem value="Material Wastage">Material Wastage</SelectItem>
-                            <SelectItem value="Poor Workmanship">Poor Workmanship</SelectItem>
-                            <SelectItem value="Quality Issue">Quality Issue</SelectItem>
-                            <SelectItem value="Safety Violation">Safety Violation</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
+                            {["Rework","Water Leakage","Damage","Delay","Overbilling","Material Wastage","Poor Workmanship","Quality Issue","Safety Violation","Other"].map(r => (
+                              <SelectItem key={r} value={r}>{r}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -203,11 +226,7 @@ export function CreateDebitNote() {
                       <FormItem>
                         <FormLabel>Detailed Description</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Provide full details of the issue..." 
-                            className="min-h-[120px]"
-                            {...field} 
-                          />
+                          <Textarea placeholder="Provide full details of the issue..." className="min-h-[120px]" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -233,9 +252,7 @@ export function CreateDebitNote() {
 
             <div className="space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>Financial Summary</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Financial Summary</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
                     control={form.control as any}
@@ -243,9 +260,7 @@ export function CreateDebitNote() {
                     render={({ field }: any) => (
                       <FormItem>
                         <FormLabel>Debit Amount (₹)</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} />
-                        </FormControl>
+                        <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -256,9 +271,7 @@ export function CreateDebitNote() {
                     render={({ field }: any) => (
                       <FormItem>
                         <FormLabel>Tax Amount (₹)</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} />
-                        </FormControl>
+                        <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -266,26 +279,22 @@ export function CreateDebitNote() {
                   <div className="pt-4 border-t mt-4">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium">Total Deduction</span>
-                      <span className="text-xl font-bold text-primary">
-                        ₹{totalDeduction.toLocaleString()}
-                      </span>
+                      <span className="text-xl font-bold text-primary">₹{totalDeduction.toLocaleString()}</span>
                     </div>
                   </div>
-                  
-                  <Button type="submit" className="w-full mt-4">Generate Debit Note</Button>
+                  <Button type="submit" className="w-full mt-4" disabled={saving}>
+                    {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Generate Debit Note
+                  </Button>
                 </CardContent>
               </Card>
-              
+
               <Card>
-                <CardHeader>
-                  <CardTitle>Approval Workflow</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle>Approval Workflow</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                        SE
-                      </div>
+                      <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">SE</div>
                       <div>
                         <p className="text-sm font-medium">Raised By</p>
                         <p className="text-xs text-muted-foreground">Site Engineer</p>
@@ -293,9 +302,7 @@ export function CreateDebitNote() {
                     </div>
                     <div className="w-px h-6 bg-border ml-4"></div>
                     <div className="flex items-center gap-3 opacity-50">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold text-sm border border-dashed">
-                        PM
-                      </div>
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-bold text-sm border border-dashed">PM</div>
                       <div>
                         <p className="text-sm font-medium">Reviewed By</p>
                         <p className="text-xs text-muted-foreground">Project Manager</p>
