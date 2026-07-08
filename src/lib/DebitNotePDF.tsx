@@ -5,6 +5,7 @@ import {
   View,
   StyleSheet,
   pdf,
+  Image,
 } from "@react-pdf/renderer"
 import type { DebitNote } from "@/lib/supabase"
 
@@ -45,9 +46,18 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 20,
   },
+  logoBlock: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+  },
   companyBlock: {},
   companyName: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: "Helvetica-Bold",
     color: C.blue,
     letterSpacing: 0.5,
@@ -362,11 +372,14 @@ const DebitNotePDF = ({ note }: { note: NoteProps }) => (
 
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.companyBlock}>
-            <Text style={styles.companyName}>Shree Spaace Solution</Text>
-            <Text style={styles.companyTagline}>Private Limited</Text>
-            <Text style={styles.companyInfo}>info@shreespaace.com</Text>
-            <Text style={styles.companyInfo}>Mumbai, Maharashtra</Text>
+          <View style={styles.logoBlock}>
+            <Image src="/logo.png" style={styles.logoImage} />
+            <View style={styles.companyBlock}>
+              <Text style={styles.companyName}>Shree Spaace Solution</Text>
+              <Text style={styles.companyTagline}>Private Limited</Text>
+              <Text style={styles.companyInfo}>info@shreespaace.com</Text>
+              <Text style={styles.companyInfo}>Mumbai, Maharashtra</Text>
+            </View>
           </View>
           <View style={styles.dnBox}>
             <Text style={styles.dnLabel}>Debit Note No.</Text>

@@ -31,12 +31,12 @@ export function AppLayout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-20 items-center px-8 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-glow">
-                <FileText className="h-4 w-4 text-white" />
-             </div>
-             <span className="text-xl font-heading font-extrabold text-slate-900 tracking-tight">Shree<span className="text-primary">Spaace</span></span>
+        <div className="flex h-20 items-center px-6 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+             <img src="/logo.png" alt="Shree Spaace Logo" className="h-10 w-auto" />
+             <span className="text-xl font-heading font-extrabold text-slate-900 tracking-tight leading-none pt-1">
+                 Shree<br/><span className="text-primary">Spaace</span>
+             </span>
           </div>
         </div>
         <nav className="p-4 mt-4 space-y-1.5 px-4">
