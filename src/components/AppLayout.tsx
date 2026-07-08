@@ -33,9 +33,9 @@ export function AppLayout() {
       >
         <div className="flex h-20 items-center px-6 border-b border-slate-100">
           <div className="flex items-center gap-2">
-             <img src="/logo.png" alt="Shree Spaace Logo" className="h-10 w-auto" />
+             <img src="/logo.png" alt="Shree Spaace Solution Logo" className="h-10 w-auto" />
              <span className="text-xl font-heading font-extrabold text-slate-900 tracking-tight leading-none pt-1">
-                 Shree<br/><span className="text-primary">Spaace</span>
+                 Shree Spaace<br/><span className="text-primary text-sm font-bold">Solution</span>
              </span>
           </div>
         </div>
