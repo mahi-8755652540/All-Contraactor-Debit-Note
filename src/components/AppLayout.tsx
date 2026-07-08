@@ -1,11 +1,13 @@
 import { Outlet, Link, useLocation } from "react-router-dom"
-import { LayoutDashboard, FileText, Users, Building, Settings, Menu, Bell, Search } from "lucide-react"
+import { LayoutDashboard, FileText, Users, Building, Settings, Menu, Bell, Search, LogOut } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
+  const { user, signOut } = useAuth()
 
   const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -66,14 +68,21 @@ export function AppLayout() {
         </nav>
         
         <div className="absolute bottom-8 left-0 w-full px-6">
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0">
-                    <span className="text-primary font-bold text-sm">AU</span>
+            <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 flex items-center justify-between gap-2 shadow-sm">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="h-9 w-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-bold text-sm">
+                        {user?.email?.charAt(0).toUpperCase() || 'A'}
+                      </span>
+                  </div>
+                  <div className="overflow-hidden">
+                      <p className="text-sm font-semibold text-slate-900 truncate">Admin User</p>
+                      <p className="text-xs text-slate-500 truncate" title={user?.email || ''}>{user?.email}</p>
+                  </div>
                 </div>
-                <div className="overflow-hidden">
-                    <p className="text-sm font-semibold text-slate-900 truncate">Admin User</p>
-                    <p className="text-xs text-slate-500 truncate">admin@shreespaace.com</p>
-                </div>
+                <Button variant="ghost" size="icon" onClick={signOut} className="text-slate-400 hover:text-red-600 hover:bg-red-50 shrink-0" title="Sign Out">
+                  <LogOut className="h-4 w-4" />
+                </Button>
             </div>
         </div>
       </aside>
@@ -108,7 +117,7 @@ export function AppLayout() {
                 <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-red-500 border-2 border-white"></span>
             </button>
             <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-primary to-blue-400 flex items-center justify-center text-white font-bold shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-              A
+              {user?.email?.charAt(0).toUpperCase() || 'A'}
             </div>
           </div>
         </header>
