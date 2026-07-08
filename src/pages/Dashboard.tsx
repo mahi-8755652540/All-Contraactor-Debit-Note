@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { IndianRupee, Clock, CheckCircle, ArrowUpRight, Loader2 } from "lucide-react"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { IndianRupee, Clock, CheckCircle, ArrowUpRight, Loader2, LayoutDashboard } from "lucide-react"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/lib/supabase"
 
@@ -43,14 +43,29 @@ export function Dashboard() {
         // Monthly summary — group by month
         const monthMap: Record<string, number> = {}
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        
         notes.forEach((n: any) => {
           const month = monthNames[new Date(n.created_at).getMonth()]
           monthMap[month] = (monthMap[month] || 0) + Number(n.total_amount || 0)
         })
+        
         const monthly = monthNames
           .filter(m => monthMap[m])
           .map(m => ({ name: m, amount: monthMap[m] }))
-        setMonthlyData(monthly.length > 0 ? monthly : [{ name: "No Data", amount: 0 }])
+        
+        // Ensure at least 3 months show for better chart UI even if empty
+        if (monthly.length === 1) {
+            const mIndex = monthNames.indexOf(monthly[0].name);
+            if (mIndex > 0) monthly.unshift({ name: monthNames[mIndex-1], amount: 0 });
+            if (mIndex < 11) monthly.push({ name: monthNames[mIndex+1], amount: 0 });
+        } else if (monthly.length === 0) {
+            const currentMonth = new Date().getMonth();
+            monthly.push({ name: monthNames[currentMonth === 0 ? 11 : currentMonth - 1], amount: 0 });
+            monthly.push({ name: monthNames[currentMonth], amount: 0 });
+            monthly.push({ name: monthNames[currentMonth === 11 ? 0 : currentMonth + 1], amount: 0 });
+        }
+
+        setMonthlyData(monthly)
       }
 
       setLoading(false)
@@ -67,80 +82,131 @@ export function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        <span className="ml-3 text-muted-foreground text-lg">Loading dashboard...</span>
+      <div className="flex items-center justify-center h-[calc(100vh-100px)]">
+        <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <span className="text-muted-foreground text-lg font-medium">Loading dashboard data...</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Dashboard</h2>
+    <div className="space-y-8 pb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+        <div>
+            <h2 className="text-3xl font-heading font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                Dashboard Overview
+            </h2>
+            <p className="text-muted-foreground mt-1">Here's what's happening with your debit notes today.</p>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-0 shadow-soft overflow-hidden relative group">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Deduction</CardTitle>
-            <IndianRupee className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold text-slate-600">Total Deduction</CardTitle>
+            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <IndianRupee className="h-5 w-5 text-blue-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{stats.totalDeduction.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Across all debit notes</p>
+            <div className="text-3xl font-bold font-heading text-slate-900">₹{stats.totalDeduction.toLocaleString("en-IN")}</div>
+            <p className="text-sm text-muted-foreground mt-1 font-medium">Across all time</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-soft overflow-hidden relative group">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-            <Clock className="h-4 w-4 text-amber-500" />
+            <CardTitle className="text-sm font-semibold text-slate-600">Pending Review</CardTitle>
+            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-amber-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
+            <div className="text-3xl font-bold font-heading text-slate-900">{stats.pending}</div>
+            <p className="text-sm text-amber-600 mt-1 font-medium">Require immediate action</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-soft overflow-hidden relative group">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved Notes</CardTitle>
-            <CheckCircle className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-semibold text-slate-600">Approved Notes</CardTitle>
+            <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-emerald-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.approved}</div>
-            <p className="text-xs text-muted-foreground">Ready for payout deduction</p>
+            <div className="text-3xl font-bold font-heading text-slate-900">{stats.approved}</div>
+            <p className="text-sm text-emerald-600 mt-1 font-medium">Ready for payout</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-soft overflow-hidden relative group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Applied to Payout</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-sm font-semibold text-slate-600">Applied to Payout</CardTitle>
+            <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <ArrowUpRight className="h-5 w-5 text-purple-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.applied}</div>
-            <p className="text-xs text-muted-foreground">Successfully deducted</p>
+            <div className="text-3xl font-bold font-heading text-slate-900">{stats.applied}</div>
+            <p className="text-sm text-purple-600 mt-1 font-medium">Successfully deducted</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         {/* Bar Chart */}
-        <Card className="col-span-4">
+        <Card className="col-span-4 border-0 shadow-soft">
           <CardHeader>
-            <CardTitle>Monthly Deduction Summary</CardTitle>
+            <CardTitle className="font-heading">Monthly Deduction Summary</CardTitle>
+            <CardDescription>Total deductions processed over recent months</CardDescription>
           </CardHeader>
-          <CardContent className="pl-2">
-            <div className="h-[300px]">
+          <CardContent className="pl-0 pr-6">
+            <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
-                  <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} />
-                  <Tooltip cursor={{ fill: "transparent" }} formatter={(v: any) => [`₹${Number(v).toLocaleString()}`, "Amount"]} />
-                  <Bar dataKey="amount" fill="currentColor" radius={[4, 4, 0, 0]} className="fill-primary" />
+                <BarChart data={monthlyData} margin={{ top: 20, right: 0, left: 20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.5}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="#64748b" 
+                    fontSize={13} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    stroke="#64748b" 
+                    fontSize={13} 
+                    tickLine={false} 
+                    axisLine={false} 
+                    tickFormatter={(v) => `₹${v.toLocaleString("en-IN")}`} 
+                    dx={-10}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: "rgba(226, 232, 240, 0.4)" }} 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.1)' }}
+                    formatter={(v: any) => [`₹${Number(v).toLocaleString("en-IN")}`, "Amount"]} 
+                  />
+                  <Bar 
+                    dataKey="amount" 
+                    fill="url(#colorAmount)" 
+                    radius={[6, 6, 0, 0]} 
+                    maxBarSize={60}
+                    animationDuration={1500}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -148,27 +214,32 @@ export function Dashboard() {
         </Card>
 
         {/* Recent Activity */}
-        <Card className="col-span-3">
+        <Card className="col-span-3 border-0 shadow-soft">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="font-heading">Recent Activity</CardTitle>
+            <CardDescription>Latest debit notes created in the system</CardDescription>
           </CardHeader>
           <CardContent>
             {recentNotes.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                <p>No debit notes yet.</p>
-                <p className="text-sm mt-1">Create your first debit note!</p>
+              <div className="flex flex-col items-center justify-center text-center py-12 px-4 bg-slate-50 rounded-lg border border-dashed">
+                <LayoutDashboard className="h-10 w-10 text-slate-300 mb-3" />
+                <p className="text-slate-600 font-medium">No debit notes yet.</p>
+                <p className="text-sm text-slate-400 mt-1">Create your first debit note to see activity here!</p>
               </div>
             ) : (
               <div className="space-y-6">
                 {recentNotes.map((note) => (
-                  <div key={note.id} className="flex items-center">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium leading-none">{note.dn_number}</p>
-                      <p className="text-sm text-muted-foreground">{note.contractor_name}</p>
+                  <div key={note.id} className="flex items-center group p-3 -mx-3 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                        {note.contractor_name.charAt(0)}
                     </div>
-                    <div className="ml-auto text-right">
-                      <div className="font-medium">₹{Number(note.total_amount).toLocaleString()}</div>
-                      <Badge variant={getStatusVariant(note.status)} className="mt-1 text-xs">
+                    <div className="space-y-1 ml-4 flex-1">
+                      <p className="text-sm font-semibold text-slate-900">{note.dn_number}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{note.contractor_name}</p>
+                    </div>
+                    <div className="ml-auto text-right shrink-0">
+                      <div className="font-bold text-slate-900">₹{Number(note.total_amount).toLocaleString("en-IN")}</div>
+                      <Badge variant={getStatusVariant(note.status)} className="mt-1.5 text-[10px] px-2 py-0 h-5">
                         {note.status}
                       </Badge>
                     </div>
