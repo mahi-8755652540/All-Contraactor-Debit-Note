@@ -131,41 +131,42 @@ export function DebitNotes() {
         </Link>
       </div>
 
-      {/* Filters Toolbar */}
-      <Card className="border-0 shadow-soft p-2 flex flex-col sm:flex-row gap-2 items-center justify-between">
-        <div className="relative w-full sm:max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            type="search"
-            placeholder="Search by DN, Contractor, Project..."
-            className="w-full bg-slate-50/50 border-transparent focus-visible:ring-primary/20 pl-9 rounded-md transition-colors hover:bg-slate-100/50"
-            value={searchTerm}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex items-center gap-2 bg-slate-50 border rounded-md p-1">
-            <Filter className="h-4 w-4 text-slate-400 ml-2" />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[130px] border-0 bg-transparent focus:ring-0 h-8 text-sm font-medium">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Status</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Approved">Approved</SelectItem>
-                <SelectItem value="Applied">Applied</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Unified Table Card */}
+      <Card className="border-0 shadow-soft overflow-hidden bg-white">
+        {/* Filters Toolbar */}
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/30">
+          <div className="relative w-full sm:max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              type="search"
+              placeholder="Search by DN, Contractor, Project..."
+              className="w-full bg-white border-slate-200 focus-visible:ring-primary/20 pl-9 rounded-md shadow-sm"
+              value={searchTerm}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <Button variant="outline" onClick={exportToCSV} className="text-slate-600 bg-white shadow-sm border-slate-200">
-            <Download className="mr-2 h-4 w-4" /> Export CSV
-          </Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 bg-white shadow-sm border border-slate-200 rounded-md p-1">
+              <Filter className="h-4 w-4 text-slate-400 ml-2" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[130px] border-0 bg-transparent focus:ring-0 h-8 text-sm font-medium">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Status</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                  <SelectItem value="Applied">Applied</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" onClick={exportToCSV} className="text-slate-600 bg-white shadow-sm border-slate-200">
+              <Download className="mr-2 h-4 w-4" /> Export CSV
+            </Button>
+          </div>
         </div>
-      </Card>
 
-      {/* Data Table */}
-      <Card className="border-0 shadow-soft overflow-hidden">
+        {/* Data Table */}
         {loading ? (
           <div className="flex flex-col items-center justify-center p-20">
             <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
@@ -213,7 +214,7 @@ export function DebitNotes() {
                     <TableCell className="text-right pr-4">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity bg-white hover:bg-slate-100 shadow-sm border border-slate-200">
+                          <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-700 transition-colors bg-white hover:bg-slate-100 shadow-sm border border-slate-200">
                             <Eye className="h-4 w-4 mr-1.5 text-primary" /> View
                           </Button>
                         </DialogTrigger>

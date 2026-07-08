@@ -154,22 +154,23 @@ export function Projects() {
         </Dialog>
       </div>
 
-      {/* Filters Toolbar */}
-      <Card className="border-0 shadow-soft p-2 flex flex-col sm:flex-row gap-2 items-center justify-between">
-        <div className="relative w-full sm:max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            type="search"
-            placeholder="Search projects..."
-            className="w-full bg-slate-50/50 border-transparent focus-visible:ring-primary/20 pl-9 rounded-md transition-colors hover:bg-slate-100/50"
-            value={searchTerm}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-          />
+      {/* Unified Table Card */}
+      <Card className="border-0 shadow-soft overflow-hidden bg-white">
+        {/* Filters Toolbar */}
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/30">
+          <div className="relative w-full sm:max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              type="search"
+              placeholder="Search projects..."
+              className="w-full bg-white border-slate-200 focus-visible:ring-primary/20 pl-9 rounded-md shadow-sm"
+              value={searchTerm}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
-      </Card>
 
-      {/* Data Table */}
-      <Card className="border-0 shadow-soft overflow-hidden">
+        {/* Data Table */}
         {loading ? (
           <div className="flex flex-col items-center justify-center p-20">
             <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
@@ -224,8 +225,8 @@ export function Projects() {
                     <TableCell className="text-right pr-4">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-white hover:bg-slate-100 shadow-sm border border-slate-200">
-                              <MoreHorizontal className="h-4 w-4 text-slate-600" />
+                          <Button variant="ghost" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 transition-colors bg-white hover:bg-slate-100 shadow-sm border border-slate-200">
+                              <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48 shadow-xl border-0 ring-1 ring-slate-200 rounded-xl">
