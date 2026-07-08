@@ -27,16 +27,18 @@ export function Login() {
     setError(null)
 
     try {
+      const cleanEmail = email.trim()
+      
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
         })
         if (error) throw error
         setError('Check your email for the confirmation link.') // Usually for email confirmation, but might auto-login if confirmation disabled
       } else {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: cleanEmail,
           password,
         })
         if (error) throw error
