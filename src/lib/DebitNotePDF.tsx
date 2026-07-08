@@ -8,351 +8,492 @@ import {
 } from "@react-pdf/renderer"
 import type { DebitNote } from "@/lib/supabase"
 
+const C = {
+  blue: "#1d4ed8",
+  lightBlue: "#eff6ff",
+  borderBlue: "#bfdbfe",
+  dark: "#0f172a",
+  mid: "#334155",
+  muted: "#64748b",
+  light: "#f1f5f9",
+  border: "#e2e8f0",
+  white: "#ffffff",
+  green: "#15803d",
+  greenBg: "#dcfce7",
+  red: "#b91c1c",
+}
+
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
-    fontSize: 10,
-    padding: 40,
-    backgroundColor: "#ffffff",
-    color: "#1e293b",
+    fontSize: 9,
+    backgroundColor: C.white,
+    color: C.dark,
   },
-  // Header
+  // Top accent bar
+  topBar: {
+    backgroundColor: C.blue,
+    height: 6,
+  },
+  body: {
+    padding: "28 40 40 40",
+  },
+  // ── Header ──
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 30,
-    borderBottomWidth: 2,
-    borderBottomColor: "#2563eb",
-    paddingBottom: 16,
+    marginBottom: 20,
   },
+  companyBlock: {},
   companyName: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: "Helvetica-Bold",
-    color: "#2563eb",
+    color: C.blue,
+    letterSpacing: 0.5,
   },
-  companySubtitle: {
+  companyTagline: {
     fontSize: 8,
-    color: "#64748b",
+    color: C.muted,
     marginTop: 2,
   },
-  dnBadge: {
-    backgroundColor: "#eff6ff",
-    borderWidth: 1,
-    borderColor: "#2563eb",
-    borderRadius: 4,
-    padding: 8,
-    alignItems: "flex-end",
+  companyInfo: {
+    fontSize: 8,
+    color: C.muted,
+    marginTop: 1,
   },
-  dnTitle: {
+  dnBox: {
+    backgroundColor: C.lightBlue,
+    borderWidth: 1,
+    borderColor: C.borderBlue,
+    borderRadius: 6,
+    padding: "10 14",
+    alignItems: "flex-end",
+    minWidth: 160,
+  },
+  dnLabel: {
     fontSize: 7,
-    color: "#64748b",
+    color: C.blue,
+    fontFamily: "Helvetica-Bold",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   dnNumber: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: "Helvetica-Bold",
-    color: "#2563eb",
-    marginTop: 2,
+    color: C.dark,
+    marginTop: 3,
   },
-  // Title bar
-  titleBar: {
-    backgroundColor: "#2563eb",
-    padding: 10,
-    marginBottom: 20,
-    borderRadius: 4,
+  dnDate: {
+    fontSize: 8,
+    color: C.muted,
+    marginTop: 4,
+  },
+
+  // ── Divider ──
+  divider: {
+    borderBottomWidth: 2,
+    borderBottomColor: C.blue,
+    marginBottom: 18,
+  },
+
+  // ── Title ──
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 18,
   },
   titleText: {
-    color: "#ffffff",
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: "Helvetica-Bold",
-    textAlign: "center",
+    color: C.blue,
+    letterSpacing: 3,
     textTransform: "uppercase",
-    letterSpacing: 2,
+    textAlign: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: C.blue,
+    paddingBottom: 4,
   },
-  // Info grid
-  infoGrid: {
+
+  // ── Parties (Issued By / Issued To) ──
+  partiesRow: {
     flexDirection: "row",
     gap: 16,
-    marginBottom: 20,
+    marginBottom: 18,
   },
-  infoBox: {
+  partyBox: {
     flex: 1,
-    backgroundColor: "#f8fafc",
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 4,
-    padding: 12,
+    borderColor: C.border,
+    borderRadius: 5,
+    padding: "10 12",
   },
-  infoBoxTitle: {
+  partyBoxIssued: {
+    backgroundColor: C.light,
+  },
+  partyTitle: {
     fontSize: 7,
-    color: "#64748b",
+    fontFamily: "Helvetica-Bold",
+    color: C.blue,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     marginBottom: 6,
-    fontFamily: "Helvetica-Bold",
+    borderBottomWidth: 1,
+    borderBottomColor: C.borderBlue,
+    paddingBottom: 4,
   },
-  infoRow: {
+  partyRow: {
     flexDirection: "row",
-    marginBottom: 4,
+    marginBottom: 3,
   },
-  infoLabel: {
-    fontSize: 9,
-    color: "#64748b",
-    width: 90,
+  partyLabel: {
+    fontSize: 8,
+    color: C.muted,
+    width: 80,
   },
-  infoValue: {
-    fontSize: 9,
-    color: "#1e293b",
+  partyValue: {
+    fontSize: 8,
     fontFamily: "Helvetica-Bold",
+    color: C.dark,
     flex: 1,
   },
-  // Financial table
-  tableHeader: {
+
+  // ── Financial Table ──
+  tableContainer: {
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 5,
+    overflow: "hidden",
+  },
+  tableHead: {
     flexDirection: "row",
-    backgroundColor: "#1e293b",
+    backgroundColor: C.dark,
     padding: "8 12",
-    borderRadius: 4,
-    marginBottom: 4,
   },
-  tableHeaderText: {
-    color: "#ffffff",
+  tableHeadCell: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
-    flex: 1,
+    color: C.white,
     textTransform: "uppercase",
+    letterSpacing: 0.8,
   },
-  tableHeaderRight: {
-    color: "#ffffff",
+  tableHeadRight: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
+    color: C.white,
     textAlign: "right",
-    width: 100,
+    width: 90,
   },
   tableRow: {
     flexDirection: "row",
-    padding: "8 12",
+    padding: "9 12",
     borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
+    borderBottomColor: C.border,
     alignItems: "center",
   },
   tableRowAlt: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: C.light,
   },
   tableCell: {
     fontSize: 9,
-    color: "#334155",
+    color: C.mid,
     flex: 1,
   },
   tableCellRight: {
     fontSize: 9,
-    color: "#334155",
-    textAlign: "right",
-    width: 100,
     fontFamily: "Helvetica-Bold",
+    color: C.dark,
+    textAlign: "right",
+    width: 90,
   },
-  // Total row
   totalRow: {
     flexDirection: "row",
-    padding: "10 12",
-    backgroundColor: "#eff6ff",
-    borderWidth: 1,
-    borderColor: "#2563eb",
-    borderRadius: 4,
-    marginTop: 4,
+    padding: "11 12",
+    backgroundColor: C.blue,
     alignItems: "center",
   },
   totalLabel: {
     fontSize: 11,
     fontFamily: "Helvetica-Bold",
-    color: "#1e293b",
+    color: C.white,
     flex: 1,
   },
   totalValue: {
     fontSize: 14,
     fontFamily: "Helvetica-Bold",
-    color: "#2563eb",
+    color: C.white,
     textAlign: "right",
-    width: 100,
+    width: 90,
   },
-  // Description
+
+  // ── Description ──
   descBox: {
-    marginTop: 16,
-    backgroundColor: "#f8fafc",
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 4,
-    padding: 12,
+    borderColor: C.border,
+    borderRadius: 5,
+    padding: "10 12",
+    marginBottom: 14,
+    backgroundColor: C.light,
   },
   descTitle: {
-    fontSize: 8,
+    fontSize: 7,
     fontFamily: "Helvetica-Bold",
-    color: "#64748b",
+    color: C.blue,
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 6,
+    letterSpacing: 1.2,
+    marginBottom: 5,
   },
   descText: {
     fontSize: 9,
-    color: "#334155",
-    lineHeight: 1.5,
+    color: C.mid,
+    lineHeight: 1.6,
   },
-  // Status
-  statusRow: {
+
+  // ── Status + Notes ──
+  bottomRow: {
+    flexDirection: "row",
+    gap: 16,
+    marginBottom: 30,
+  },
+  statusBox: {
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 5,
+    padding: "8 12",
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 12,
     gap: 8,
   },
   statusLabel: {
-    fontSize: 9,
-    color: "#64748b",
+    fontSize: 8,
+    color: C.muted,
   },
-  statusBadge: {
-    backgroundColor: "#dcfce7",
-    borderRadius: 10,
+  statusPill: {
+    borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 3,
+    backgroundColor: C.greenBg,
   },
   statusText: {
     fontSize: 8,
     fontFamily: "Helvetica-Bold",
-    color: "#166534",
+    color: C.green,
   },
-  // Footer
-  footer: {
-    marginTop: 40,
-    borderTopWidth: 1,
-    borderTopColor: "#e2e8f0",
-    paddingTop: 16,
+  noteBox: {
+    borderWidth: 1,
+    borderColor: C.borderBlue,
+    borderRadius: 5,
+    padding: "8 12",
+    flex: 2,
+    backgroundColor: C.lightBlue,
+  },
+  noteText: {
+    fontSize: 8,
+    color: C.blue,
+    lineHeight: 1.5,
+  },
+
+  // ── Signature Row ──
+  sigRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
+    marginBottom: 16,
   },
-  footerLeft: {
-    fontSize: 8,
-    color: "#94a3b8",
-  },
-  signatureBox: {
+  sigBlock: {
     alignItems: "center",
+    width: 160,
   },
-  signatureLine: {
+  sigLine: {
+    borderTopWidth: 1,
+    borderTopColor: C.mid,
     width: 150,
-    borderBottomWidth: 1,
-    borderBottomColor: "#94a3b8",
     marginBottom: 4,
   },
-  signatureLabel: {
+  sigLabel: {
     fontSize: 8,
-    color: "#64748b",
+    color: C.muted,
+    textAlign: "center",
+  },
+  sigName: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    color: C.dark,
+    textAlign: "center",
+  },
+
+  // ── Footer ──
+  footer: {
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+    paddingTop: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  footerLeft: {
+    fontSize: 7,
+    color: C.muted,
+  },
+  footerRight: {
+    fontSize: 7,
+    color: C.muted,
+    textAlign: "right",
+  },
+  bottomAccent: {
+    backgroundColor: C.blue,
+    height: 4,
+    marginTop: 16,
   },
 })
 
-// The PDF Document component
-const DebitNotePDF = ({ note }: { note: DebitNote & { contractor_name?: string; project_name?: string } }) => (
+const fmt = (n: number) => `Rs. ${Number(n).toLocaleString("en-IN")}`
+
+type NoteProps = DebitNote & { contractor_name?: string; project_name?: string }
+
+const DebitNotePDF = ({ note }: { note: NoteProps }) => (
   <Document>
     <Page size="A4" style={styles.page}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.companyName}>Shree Spaace Solution</Text>
-          <Text style={styles.companySubtitle}>Pvt. Ltd.</Text>
-          <Text style={[styles.companySubtitle, { marginTop: 4 }]}>info@shreespaace.com</Text>
-        </View>
-        <View style={styles.dnBadge}>
-          <Text style={styles.dnTitle}>Debit Note No.</Text>
-          <Text style={styles.dnNumber}>{note.dn_number}</Text>
-          <Text style={[styles.dnTitle, { marginTop: 4 }]}>Date: {note.date_issued}</Text>
-        </View>
-      </View>
+      <View style={styles.topBar} />
+      <View style={styles.body}>
 
-      {/* Title */}
-      <View style={styles.titleBar}>
-        <Text style={styles.titleText}>Debit Note</Text>
-      </View>
-
-      {/* Info Grid */}
-      <View style={styles.infoGrid}>
-        <View style={styles.infoBox}>
-          <Text style={styles.infoBoxTitle}>Contractor Details</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Company:</Text>
-            <Text style={styles.infoValue}>{note.contractor_name || "—"}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.companyBlock}>
+            <Text style={styles.companyName}>Shree Spaace Solution</Text>
+            <Text style={styles.companyTagline}>Private Limited</Text>
+            <Text style={styles.companyInfo}>info@shreespaace.com</Text>
+            <Text style={styles.companyInfo}>Mumbai, Maharashtra</Text>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Original Invoice:</Text>
-            <Text style={styles.infoValue}>{note.original_invoice || "N/A"}</Text>
+          <View style={styles.dnBox}>
+            <Text style={styles.dnLabel}>Debit Note No.</Text>
+            <Text style={styles.dnNumber}>{note.dn_number}</Text>
+            <Text style={styles.dnDate}>Date: {note.date_issued}</Text>
           </View>
         </View>
-        <View style={styles.infoBox}>
-          <Text style={styles.infoBoxTitle}>Project Details</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Project:</Text>
-            <Text style={styles.infoValue}>{note.project_name || "—"}</Text>
+
+        <View style={styles.divider} />
+
+        {/* Title */}
+        <View style={styles.titleRow}>
+          <Text style={styles.titleText}>Debit Note</Text>
+        </View>
+
+        {/* Parties */}
+        <View style={styles.partiesRow}>
+          <View style={[styles.partyBox, styles.partyBoxIssued]}>
+            <Text style={styles.partyTitle}>Issued By</Text>
+            <View style={styles.partyRow}>
+              <Text style={styles.partyLabel}>Company:</Text>
+              <Text style={styles.partyValue}>Shree Spaace Solution Pvt. Ltd.</Text>
+            </View>
+            <View style={styles.partyRow}>
+              <Text style={styles.partyLabel}>Address:</Text>
+              <Text style={styles.partyValue}>Mumbai, Maharashtra</Text>
+            </View>
+            <View style={styles.partyRow}>
+              <Text style={styles.partyLabel}>Email:</Text>
+              <Text style={styles.partyValue}>info@shreespaace.com</Text>
+            </View>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Site Location:</Text>
-            <Text style={styles.infoValue}>{note.site_location || "—"}</Text>
+
+          <View style={styles.partyBox}>
+            <Text style={styles.partyTitle}>Issued To (Contractor)</Text>
+            <View style={styles.partyRow}>
+              <Text style={styles.partyLabel}>Company:</Text>
+              <Text style={styles.partyValue}>{note.contractor_name || "—"}</Text>
+            </View>
+            <View style={styles.partyRow}>
+              <Text style={styles.partyLabel}>Project:</Text>
+              <Text style={styles.partyValue}>{note.project_name || "—"}</Text>
+            </View>
+            <View style={styles.partyRow}>
+              <Text style={styles.partyLabel}>Site Location:</Text>
+              <Text style={styles.partyValue}>{note.site_location || "—"}</Text>
+            </View>
+            <View style={styles.partyRow}>
+              <Text style={styles.partyLabel}>Orig. Invoice:</Text>
+              <Text style={styles.partyValue}>{note.original_invoice || "N/A"}</Text>
+            </View>
           </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Reason:</Text>
-            <Text style={styles.infoValue}>{note.reason_category}</Text>
+        </View>
+
+        {/* Financial Table */}
+        <View style={styles.tableContainer}>
+          <View style={styles.tableHead}>
+            <Text style={[styles.tableHeadCell, { flex: 1 }]}>Description</Text>
+            <Text style={styles.tableHeadRight}>Amount</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={styles.tableCell}>
+              Reason: {note.reason_category}
+            </Text>
+            <Text style={styles.tableCellRight}>{fmt(note.debit_amount)}</Text>
+          </View>
+          <View style={[styles.tableRow, styles.tableRowAlt]}>
+            <Text style={styles.tableCell}>Applicable Tax / Other Charges</Text>
+            <Text style={styles.tableCellRight}>{fmt(note.tax_amount)}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total Amount to be Deducted</Text>
+            <Text style={styles.totalValue}>{fmt(note.total_amount)}</Text>
           </View>
         </View>
-      </View>
 
-      {/* Financial Table */}
-      <View style={styles.tableHeader}>
-        <Text style={styles.tableHeaderText}>Description</Text>
-        <Text style={styles.tableHeaderRight}>Amount (₹)</Text>
-      </View>
-      <View style={styles.tableRow}>
-        <Text style={styles.tableCell}>Debit Amount</Text>
-        <Text style={styles.tableCellRight}>₹{Number(note.debit_amount).toLocaleString()}</Text>
-      </View>
-      <View style={[styles.tableRow, styles.tableRowAlt]}>
-        <Text style={styles.tableCell}>Tax Amount</Text>
-        <Text style={styles.tableCellRight}>₹{Number(note.tax_amount).toLocaleString()}</Text>
-      </View>
-      <View style={styles.totalRow}>
-        <Text style={styles.totalLabel}>Total Deduction</Text>
-        <Text style={styles.totalValue}>₹{Number(note.total_amount).toLocaleString()}</Text>
-      </View>
+        {/* Description */}
+        <View style={styles.descBox}>
+          <Text style={styles.descTitle}>Description / Remarks</Text>
+          <Text style={styles.descText}>{note.description}</Text>
+        </View>
 
-      {/* Description */}
-      <View style={styles.descBox}>
-        <Text style={styles.descTitle}>Description / Remarks</Text>
-        <Text style={styles.descText}>{note.description}</Text>
-      </View>
+        {/* Status + Note */}
+        <View style={styles.bottomRow}>
+          <View style={styles.statusBox}>
+            <Text style={styles.statusLabel}>Status:</Text>
+            <View style={styles.statusPill}>
+              <Text style={styles.statusText}>{note.status}</Text>
+            </View>
+          </View>
+          <View style={styles.noteBox}>
+            <Text style={styles.noteText}>
+              Note: This debit note is issued against the above contractor for the reason mentioned. The amount will be deducted from the upcoming payout as per the contract terms and conditions agreed upon.
+            </Text>
+          </View>
+        </View>
 
-      {/* Status */}
-      <View style={styles.statusRow}>
-        <Text style={styles.statusLabel}>Status:</Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>{note.status}</Text>
+        {/* Signatures */}
+        <View style={styles.sigRow}>
+          <View style={styles.sigBlock}>
+            <View style={styles.sigLine} />
+            <Text style={styles.sigName}>Contractor Representative</Text>
+            <Text style={styles.sigLabel}>Signature & Stamp</Text>
+          </View>
+          <View style={styles.sigBlock}>
+            <View style={styles.sigLine} />
+            <Text style={styles.sigName}>Authorized Signatory</Text>
+            <Text style={styles.sigLabel}>Shree Spaace Solution Pvt. Ltd.</Text>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerLeft}>
+            Generated by Shree Spaace Solution Pvt. Ltd. | System-generated document — no physical signature required.
+          </Text>
+          <Text style={styles.footerRight}>
+            {note.dn_number} | {note.date_issued}
+          </Text>
         </View>
       </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <View>
-          <Text style={styles.footerLeft}>Generated by Shree Spaace Solution Pvt. Ltd.</Text>
-          <Text style={styles.footerLeft}>This is a system-generated document.</Text>
-        </View>
-        <View style={styles.signatureBox}>
-          <View style={styles.signatureLine} />
-          <Text style={styles.signatureLabel}>Authorized Signatory</Text>
-        </View>
-      </View>
+      <View style={styles.bottomAccent} />
     </Page>
   </Document>
 )
 
-// Export function to download PDF
-export async function downloadDebitNotePDF(
-  note: DebitNote & { contractor_name?: string; project_name?: string }
-) {
+export async function downloadDebitNotePDF(note: NoteProps) {
   const blob = await pdf(<DebitNotePDF note={note} />).toBlob()
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
