@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { Plus, Search, Filter, Download, Loader2 } from "lucide-react"
+import { Plus, Search, Filter, Download, Loader2, FileDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +11,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
+import { downloadDebitNotePDF } from "@/lib/DebitNotePDF"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
@@ -213,7 +214,9 @@ export function DebitNotes() {
                         </div>
                         <DialogFooter className="flex sm:justify-between w-full">
                           <Button variant="destructive" size="sm" onClick={() => handleDelete(invoice.id)}>Delete</Button>
-                          <Button>Print PDF</Button>
+                          <Button onClick={() => downloadDebitNotePDF(invoice)}>
+                            <FileDown className="mr-2 h-4 w-4" /> Download PDF
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
