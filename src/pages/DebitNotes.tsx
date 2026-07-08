@@ -261,6 +261,15 @@ export function DebitNotes() {
                                   <Badge variant="outline" className="bg-slate-50">{invoice.reason_category}</Badge>
                               </div>
                               <p className="text-sm text-slate-700 leading-relaxed mt-3">{invoice.description}</p>
+                              
+                              {invoice.evidence_url && (
+                                <div className="mt-4 pt-4 border-t border-slate-100">
+                                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Attached Evidence</p>
+                                  <a href={invoice.evidence_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors">
+                                    <Eye className="h-4 w-4" /> View Attachment
+                                  </a>
+                                </div>
+                              )}
                             </div>
 
                             <div className="pt-4 flex items-center justify-between">

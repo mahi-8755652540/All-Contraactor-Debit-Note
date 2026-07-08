@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Link, useNavigate } from "react-router-dom"
-import { ArrowLeft, UploadCloud, Loader2 } from "lucide-react"
+import { ArrowLeft, UploadCloud, Loader2, X, File as FileIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { supabase, type Contractor, type Project } from "@/lib/supabase"
 
 const formSchema = z.object({
@@ -33,6 +33,14 @@ export function CreateDebitNote() {
   const [projects, setProjects] = useState<Project[]>([])
   const [dnNumber, setDnNumber] = useState("DN-2026-001")
   const [saving, setSaving] = useState(false)
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setEvidenceFile(e.target.files[0])
+    }
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema) as any,
@@ -73,6 +81,30 @@ export function CreateDebitNote() {
 
   async function onSubmit(values: any) {
     setSaving(true)
+    let evidence_url = null
+    
+    if (evidenceFile) {
+      const fileExt = evidenceFile.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${dnNumber}/${fileName}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('evidence')
+        .upload(filePath, evidenceFile)
+        
+      if (uploadError) {
+        alert("Error uploading evidence: " + uploadError.message)
+        setSaving(false)
+        return
+      }
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('evidence')
+        .getPublicUrl(filePath)
+        
+      evidence_url = publicUrl
+    }
+
     const payload = {
       dn_number: dnNumber,
       date_issued: values.dateIssued,
@@ -80,6 +112,7 @@ export function CreateDebitNote() {
       project_id: values.projectId,
       site_location: values.siteLocation,
       original_invoice: values.originalInvoice || null,
+      evidence_url: evidence_url,
       reason_category: values.reasonCategory,
       description: values.description,
       debit_amount: Number(values.debitAmount),
@@ -241,11 +274,38 @@ export function CreateDebitNote() {
                   <CardDescription>Upload photos, videos, PDFs, or invoice copies</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-muted/50 transition-colors">
-                    <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
-                    <p className="font-medium">Click to upload or drag and drop</p>
-                    <p className="text-sm text-muted-foreground mt-1">SVG, PNG, JPG, PDF or MP4 (max. 10MB)</p>
-                  </div>
+                  {!evidenceFile ? (
+                    <div 
+                      className="border-2 border-dashed rounded-lg p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-muted/50 transition-colors relative"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        className="hidden" 
+                        accept="image/*,video/mp4,application/pdf"
+                        onChange={handleFileSelect}
+                      />
+                      <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
+                      <p className="font-medium">Click to upload or drag and drop</p>
+                      <p className="text-sm text-muted-foreground mt-1">SVG, PNG, JPG, PDF or MP4 (max. 10MB)</p>
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg p-4 flex items-center justify-between bg-slate-50">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="p-2 bg-white rounded shadow-sm border border-slate-100">
+                          <FileIcon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="font-medium text-sm text-slate-900 truncate pr-4">{evidenceFile.name}</p>
+                          <p className="text-xs text-muted-foreground">{(evidenceFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" type="button" className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0" onClick={() => setEvidenceFile(null)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

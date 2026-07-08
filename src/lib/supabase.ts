@@ -37,6 +37,7 @@ export type DebitNote = {
   project_name?: string
   site_location: string
   original_invoice?: string
+  evidence_url?: string
   reason_category: string
   description: string
   debit_amount: number
